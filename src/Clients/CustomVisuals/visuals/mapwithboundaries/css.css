@@ -1,0 +1,73 @@
+/** Your CSS code goes here */
+.powerbi-sample-table tr {
+  border-top: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+}
+.powerbi-sample-table th {
+  display: none;
+}
+.powerbi-sample-table td {
+  display: block;
+}
+.powerbi-sample-table td:first-child {
+  padding-top: .5em;
+}
+.powerbi-sample-table td:last-child {
+  padding-bottom: .5em;
+}
+.powerbi-sample-table td:before {
+  content: attr(data-th) ": ";
+  font-weight: bold;
+  width: 6.5em;
+  display: inline-block;
+}
+
+.powerbi-sample-table .dynamic td:before {
+  display: none;
+}
+
+.powerbi-sample-table th, .powerbi-sample-table td {
+  text-align: left;
+}
+
+.powerbi-sample-table .dynamic th, .powerbi-sample-table .dynamic td {
+  display: table-cell;
+  padding: .25em .5em;
+}
+.powerbi-sample-table .dynamic th:first-child, .powerbi-sample-table .dynamic td:first-child {
+  padding-left: 0;
+}
+.powerbi-sample-table .dynamic th:last-child, .powerbi-sample-table .dynamic td:last-child {
+  padding-right: 0;
+}
+
+.powerbi-sample-table {
+  background: #34495E;
+  color: #fff;
+  border-radius: .4em;
+  overflow: hidden;
+}
+.powerbi-sample-table tr {
+  border-color: #46627f;
+}
+.powerbi-sample-table th, .powerbi-sample-table td {
+  margin: .5em 1em;
+}
+
+.powerbi-sample-table .dynamic th, .powerbi-sample-table .dynamic td {
+  padding: 1em !important;
+}
+
+.powerbi-sample-table th, .powerbi-sample-table td:before {
+  color: #dd5;
+}
+.states {
+            fill: rgba(128, 128, 128, 0.7);
+            stroke: rgba(256, 256, 256, 0.7);
+            stroke-width: .5px;
+            stroke-linejoin: round;
+        }
+
+            .states:hover {
+                fill: rgba(255, 0, 0, 0.5);
+            }
