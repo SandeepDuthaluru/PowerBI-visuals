@@ -62,12 +62,22 @@
   color: #dd5;
 }
 .states {
-            fill: rgba(128, 128, 128, 0.7);
+            fill: rgba(195, 252, 129, 0.5);
             stroke: rgba(256, 256, 256, 0.7);
             stroke-width: .5px;
             stroke-linejoin: round;
         }
 
             .states:hover {
+                fill: rgba(255, 0, 0, 0.5);
+            }
+            .counties {
+            fill: rgba(195, 252, 129, 0.5);
+            stroke: rgba(256, 256, 256, 0.7);
+            stroke-width: .5px;
+            stroke-linejoin: round;
+        }
+
+            .counties:hover {
                 fill: rgba(255, 0, 0, 0.5);
             }
