@@ -4,7 +4,16 @@ var map, d3MapTools, countiesLayer, counties;
 
 $.getScript('https://d3js.org/d3.v3.min.js');
 $.getScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.20/topojson.js');
-$.getScript("https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1");
+//$.getScript("https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1",function(){
+//          $(document).ready(ready);
+//    });
+	
+var scriptElement = document.createElement('script');
+scriptElement.type = 'text/javascript';
+scriptElement.setAttribute('async',true);
+scriptElement.src = "https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1";
+debugger;
+document.getElementsByTagName('head')[0].appendChild(scriptElement);
 
 var svg;
 
@@ -26,7 +35,7 @@ module powerbi.visuals {
         values: ValueViewModel[];
     }
 
-    export class USTestMap implements IVisual {        
+    export class USTestMap3 implements IVisual {        
         public static capabilities: VisualCapabilities = {
             dataRoles: [
                 {
@@ -197,7 +206,7 @@ module powerbi.visuals {
             this.hostContainer = options.element.css('overflow-x', 'hidden');														
 			
 			var container = options.element.get(0);
-			var content = document.createElement("span");	
+			var content = document.createElement("content");	
 			debugger;
 			setTimeout(() => {						
 			
@@ -205,11 +214,11 @@ module powerbi.visuals {
                     credentials: 'AsLj_okjJSBjbOnCP3C7E_opWa8qmtwmWV69nblODwur1a7Hq0_G4SWbm9rcpUgq',
                     center: new Microsoft.Maps.Location(52, -115),
                     zoom: 4
-                });													
-						
-				container.appendChild(content);
+                });																					
 						
                 Microsoft.Maps.Events.addHandler(map, 'tiledownloadcomplete', () => this.loadCounties(content));
+				
+				container.appendChild(content);
             });
                 				
             Microsoft.Maps.registerModule("D3OverlayModule", D3OverlayManager);
@@ -260,7 +269,7 @@ module powerbi.visuals {
 
             this.updateContainerViewports(options.viewport);
 
-            var viewModel = USTestMap.converter(dataViews[0], this.colorPalette);
+            var viewModel = USTestMap3.converter(dataViews[0], this.colorPalette);
             var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));            
         }
 
