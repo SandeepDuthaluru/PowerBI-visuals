@@ -26,7 +26,7 @@ module powerbi.visuals {
         values: ValueViewModel[];
     }
 
-    export class USTestVisual implements IVisual {        
+    export class USTestMap implements IVisual {        
         public static capabilities: VisualCapabilities = {
             dataRoles: [
                 {
@@ -195,15 +195,21 @@ module powerbi.visuals {
             this.colorPalette = options.style.colorPalette.dataColors;
             // element is the element in which your visual will be hosted.
             this.hostContainer = options.element.css('overflow-x', 'hidden');														
-							
-			setTimeout(() => {
-                    map = new Microsoft.Maps.Map(options.element.get(0), {
+			
+			var container = options.element.get(0);
+			var content = document.createElement("span");	
+			debugger;
+			setTimeout(() => {						
+			
+                    map = new Microsoft.Maps.Map(content, {
                     credentials: 'AsLj_okjJSBjbOnCP3C7E_opWa8qmtwmWV69nblODwur1a7Hq0_G4SWbm9rcpUgq',
                     center: new Microsoft.Maps.Location(52, -115),
                     zoom: 4
-                });
+                });													
 						
-                Microsoft.Maps.Events.addHandler(map, 'tiledownloadcomplete', () => this.loadCounties(options.element.get(0)));
+				container.appendChild(content);
+						
+                Microsoft.Maps.Events.addHandler(map, 'tiledownloadcomplete', () => this.loadCounties(content));
             });
                 				
             Microsoft.Maps.registerModule("D3OverlayModule", D3OverlayManager);
@@ -254,7 +260,7 @@ module powerbi.visuals {
 
             this.updateContainerViewports(options.viewport);
 
-            var viewModel = USTestVisual.converter(dataViews[0], this.colorPalette);
+            var viewModel = USTestMap.converter(dataViews[0], this.colorPalette);
             var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));            
         }
 
