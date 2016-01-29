@@ -20,7 +20,7 @@ module powerbi.visuals {
         values: ValueViewModel[];
     }
 
-    export class APMandalMap implements IVisual {        
+    export class APDistrictMap implements IVisual {        
         public static capabilities: VisualCapabilities = {
             dataRoles: [
                 {
@@ -216,7 +216,7 @@ module powerbi.visuals {
 					
 					var jsondata = "";
                     var xhr = new XMLHttpRequest();
-					xhr.open('GET', encodeURI('https://icrisat.blob.core.windows.net/json/apmand.json'), false);
+					xhr.open('GET', encodeURI('https://icrisat.blob.core.windows.net/json/apdists.json'), false);
 					xhr.onload = function() {
 					if (xhr.status === 200) {
 					//alert('User\'s name is ' + xhr.responseText);
@@ -251,12 +251,12 @@ module powerbi.visuals {
         }
         
         public loadScripts(onScriptsLoaded: () => void) {		
-            if(APMandalMap.scriptsLoaded) {
+            if(APDistrictMap.scriptsLoaded) {
                 onScriptsLoaded();
                 return;
             }
             
-            APMandalMap.scriptsLoaded = true;
+            APDistrictMap.scriptsLoaded = true;
             $.when(
                                 $.getScript('https://d3js.org/d3.v3.min.js'),
                                 $.getScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.20/topojson.js'),
@@ -291,7 +291,7 @@ module powerbi.visuals {
 
             this.updateContainerViewports(options.viewport);
 
-            var viewModel = APMandalMap.converter(dataViews[0], this.colorPalette);
+            var viewModel = APDistrictMap.converter(dataViews[0], this.colorPalette);
             var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));            
         }
 
