@@ -1,9 +1,5 @@
 declare var Microsoft;
 
-var map, d3MapTools, countiesLayer, counties;
-
-var svg;
-
 module powerbi.visuals {    
     export interface CategoryViewModel {
         value: string;
@@ -184,6 +180,12 @@ module powerbi.visuals {
         private hostContainer: JQuery;
 		private colorPalette: IDataColorPalette;
 		private content: JQuery;
+		private topoData: any;
+        private d3MapTools: any;
+        private map: any;
+        private countiesLayer: any;
+        private selectedDistricts = '';
+        private selectedMandals = '';
         //private svg: D3.Selection;
         
         /** This is called once when the visual is initialially created */
@@ -192,70 +194,98 @@ module powerbi.visuals {
             // element is the element in which your visual will be hosted.
             this.hostContainer = options.element.css('overflow-x', 'hidden');                                                                                                                                                                                                                 
         this.content = $("<div>").appendTo(options.element).css("position", "relative");
-            
        this.loadScripts(() => {
-                               map = new Microsoft.Maps.Map(this.content[0], {
+               debugger;
+               var jsondata = "";                              
+			   var params = "lstDistrict=&lstMandal=";
+               if(this.selectedMandals !== undefined)
+               {
+                   if(this.selectedMandals.indexOf('India Standard Time') > 0)
+                   {
+                    
+                   }
+                   else
+                   {
+                       params = "lstDistrict=&lstMandal=" + this.selectedMandals;
+                   }
+               }			   
+			   $.ajax({
+				   url: 'https://geojsonapi.azurewebsites.net/api/filter/' + "?" + params, 
+				   async: true,
+                   dataType: 'jsonp',   //you may use jsonp for cross origin request
+                   crossDomain: true,                                     
+				}).done(x => {
+					//this.topoData = JSON.parse(x);
+                    this.topoData = x;
+                    this.map = new Microsoft.Maps.Map(this.content[0], {
                                                 credentials: 'AsLj_okjJSBjbOnCP3C7E_opWa8qmtwmWV69nblODwur1a7Hq0_G4SWbm9rcpUgq',
                                                 center: new Microsoft.Maps.Location(16.5000, 80.6400),
                                                 zoom: 6
-               });	
-		Microsoft.Maps.Events.addHandler(map, 'tiledownloadcomplete', () => this.loadCounties());                           			   
-        });
+                    });
+                    
+                    var tiledownloadcompleteId = Microsoft.Maps.Events.addHandler(this.map, 'tiledownloadcomplete', () => {
+                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);
+                        this.loadCounties();
+                    }); 
+				}).fail(x => {
+					alert('Request failed.  Returned status of ' + x);
+				});                 			   
+        	});
         }
         
         public loadCounties() {
-            d3MapTools = new D3OverlayManager(map);
-						if(countiesLayer != null)
-                        {                            
-                            if(countiesLayer.svg[0][0].parentElement != null)
-                            {
-                            countiesLayer.svg[0][0].parentElement.remove();                       }
-                        }
-            countiesLayer = d3MapTools.addLayer({
-                loaded: function (svg, projection) {
-					
-					var jsondata = "";
-                    var xhr = new XMLHttpRequest();
-					xhr.open('GET', encodeURI('https://icrisat.blob.core.windows.net/json/apdists.json'), false);
-					xhr.onload = function() {
-					if (xhr.status === 200) {
-					//alert('User\'s name is ' + xhr.responseText);
-						jsondata = xhr.responseText;
-						debugger;
-						//d3.json(JSON.parse(jsondata), function (error, Topology) {
-                        //var Topology = JSON.parse(jsondata);                          
-                        //var topoData = topojson.feature(Topology, Topology.objects.counties).features;
-						
-						var formattedTopo = JSON.parse(jsondata);
-						console.log(svg);
-					 counties = svg.selectAll('path')
-                            .data(formattedTopo)
-                          .enter().append('path')
-                            .attr('class', 'counties')
-                            .attr('d', projection)
-                        .on('click', function (feature) {
-                            debugger;
-                            alert(feature.properties["Mandal"]);
-                        });	
-						
-						//});
-					}
-					else {
-					alert('Request failed.  Returned status of ' + xhr.status);
-					}
-					};
-					xhr.send();
-					
+            if(this.d3MapTools) {
+                this.d3MapTools.clearLayers();
+            }
+            debugger;                    
+            this.d3MapTools = new D3OverlayManager(this.map);     
+            this.countiesLayer = this.d3MapTools.addLayer({
+                loaded: (svg, projection) => {
+                    svg.selectAll('path')
+                       .data(this.topoData)
+                       .enter().append('path')
+                       .attr('class', 'counties')
+                       .attr('d', projection)
+                       .on('click', (feature) => {
+                           //alert(feature.properties["Mandal"]);
+                       });
                 }
             });
         }
         
+        public ApplyFilter() {
+            debugger;
+            var jsondata = "";               
+               var params = "lstDistrict=&lstMandal=";
+               if(this.selectedMandals !== undefined)
+               {
+                   if(this.selectedMandals.indexOf('India Standard Time') > 0)
+                   {
+                    
+                   }
+                   else
+                   {
+                       params = "lstDistrict=&lstMandal=" + this.selectedMandals;
+                   }
+               }			   
+			   $.ajax({
+				   url: 'https://geojsonapi.azurewebsites.net/api/filter/' + "?" + params, 
+				   async: true,
+                   dataType: 'jsonp',   //you may use jsonp for cross origin request
+                   crossDomain: true,                                     
+				}).done(x => {
+					//this.topoData = JSON.parse(x);
+                    this.topoData = x;
+                });
+                this.loadCounties();                
+        }
+		
         public loadScripts(onScriptsLoaded: () => void) {		
             if(APDistrictMap.scriptsLoaded) {
                 onScriptsLoaded();
                 return;
             }
-            
+			
             APDistrictMap.scriptsLoaded = true;
             $.when(
                                 $.getScript('https://d3js.org/d3.v3.min.js'),
@@ -263,12 +293,15 @@ module powerbi.visuals {
                                 $.getScript("https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"),
                                 $.Deferred(( deferred ) => $( deferred.resolve ))
                     ).done(() => {
-                setTimeout(() => {
-                    Microsoft.Maps.registerModule("D3OverlayModule", D3OverlayManager);
-                    Microsoft.Maps.loadModule("D3OverlayModule"); 
-					debugger;					
-                    onScriptsLoaded();					
-                }, 0);
+				(function onModulesLoaded() {
+					if(!Microsoft.Maps.registerModule) {
+						return setTimeout(onModulesLoaded, 10);
+					}
+						
+					Microsoft.Maps.registerModule("D3OverlayModule", D3OverlayManager);
+		            Microsoft.Maps.loadModule("D3OverlayModule");
+					onScriptsLoaded();
+				})();
             });
         }
 
@@ -292,7 +325,29 @@ module powerbi.visuals {
             this.updateContainerViewports(options.viewport);
 
             var viewModel = APDistrictMap.converter(dataViews[0], this.colorPalette);
-            var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));            
+            
+            debugger;
+            
+			//options.dataViews[0].table.rows
+            this.selectedDistricts = '';
+            
+            //Here I need selected District's as well
+            
+            this.selectedMandals = '';
+            
+            for (var distRow in options.dataViews[0].table.rows) // for acts as a foreach
+            { 
+                if(this.selectedMandals === '' || this.selectedMandals === undefined || this.selectedMandals === null)
+                {
+                    this.selectedMandals = options.dataViews[0].table.rows[distRow][0];
+                }
+                else
+                {
+                    this.selectedMandals = this.selectedMandals + ',' + options.dataViews[0].table.rows[distRow][0];
+                }
+            }
+            var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));
+            this.ApplyFilter();     
         }
 
         private updateContainerViewports(viewport: IViewport) {
@@ -332,7 +387,6 @@ var D3OverlayManager = function (map) {
 
     function _init() {
         _mapDiv = map.getRootElement();
-
         if (_mapDiv.childNodes.length >= 3 && _mapDiv.childNodes[2].childNodes.length >= 2) {
             _d3Container = document.createElement('div');
             _d3Container.style.position = 'absolute';
@@ -340,63 +394,62 @@ var D3OverlayManager = function (map) {
             _d3Container.style.left = '0px';
             _mapDiv.childNodes[2].childNodes[1].appendChild(_d3Container);
 
-            _center = map.getCenter();
-            _zoom = map.getZoom();			
+            //_center = map.getCenter();
+            //_zoom = map.getZoom();			
 			//var rect1 = map.getRootElement().getBoundingClientRect();			
             _mapWidth = map.getWidth();
             _mapHeight = map.getHeight();
 
             _d3Projection = d3.geo.path().projection(<any>_mapProjection);
 
-            Microsoft.Maps.Events.addHandler(map, 'viewchange', function () {
-                var z = map.getZoom();
-
-                if (z != _zoom) {
-                    _d3Container.style.display = 'none';
-                } else {
-                    _d3Container.style.display = '';
-
-                    var cPixel = map.tryLocationToPixel(_center, Microsoft.Maps.PixelReference.viewport);
-                    _d3Container.style.top = cPixel.y + 'px';
-                    _d3Container.style.left = cPixel.x + 'px';
-                }
-            });
-
-            Microsoft.Maps.Events.addHandler(map, 'viewchangeend', function () {
-                _d3Container.style.display = '';
-
-                _d3Container.style.top = '0px';
-                _d3Container.style.left = '0px';
-
-                _worldWidth = Math.pow(2, map.getZoom()) * 256;
-                _prevX = { x: 0, y: 0 };
-				
-				
-                if (_mapHeight != map.getHeight() || _mapWidth != map.getWidth()) {
-                    //Map was resized. Resize layers.
-                    _mapWidth = map.getWidth();
-                    _mapHeight = map.getHeight();
-                }
-var rect = map.getRootElement().getBoundingClientRect();
-                for (var i = 0; i < _layers.length; i++) {
-                    if (_layers[i].svg) {
-                        //Enusre layers are the same size as the map.
-                        _layers[i].svg.attr("width", _mapWidth);
-                        _layers[i].svg.attr("height", _mapHeight);
-                        _layers[i].svg[0][0].style.left = - rect.width / 2 + 'px';
-                        _layers[i].svg[0][0].style.top = - rect.height / 2 + 'px';
-
-                        //Update data to align with projection
-                        _layers[i].svg.selectAll('path').attr("d", _d3Projection);
-                    }
-                }
-
-                _center = map.getCenter();
-                _zoom = map.getZoom();
-            });
+            Microsoft.Maps.Events.addHandler(map, 'viewchange', viewChange);
+            Microsoft.Maps.Events.addHandler(map, 'viewchangeend', viewChangeEnd);
+            
         } else {
             //Map not fully loaded yet, try again in 100ms
             setTimeout(_init, 100);
+        }
+        
+         function viewChange() {
+            var z = map.getZoom();
+            if (z != _zoom) {
+                _d3Container.style.display = 'none';
+            } else {
+                _d3Container.style.display = '';
+                var cPixel = map.tryLocationToPixel(_center, Microsoft.Maps.PixelReference.viewport);
+                _d3Container.style.top = cPixel.y + 'px';
+                _d3Container.style.left = cPixel.x + 'px';
+            }
+        }
+        
+        function viewChangeEnd() {
+            _d3Container.style.display = '';
+
+            _d3Container.style.top = '0px';
+            _d3Container.style.left = '0px';
+
+            _worldWidth = Math.pow(2, map.getZoom()) * 256;
+            _prevX = { x: 0, y: 0 };
+            
+            _mapWidth = map.getWidth();
+            _mapHeight = map.getHeight();
+            
+            var rect = _mapDiv.parentNode.getBoundingClientRect();
+            for (var i = 0; i < _layers.length; i++) {
+                if (_layers[i].svg) {
+                    //Enusre layers are the same size as the map.
+                    _layers[i].svg.attr("width", _mapWidth);
+                    _layers[i].svg.attr("height", _mapHeight);
+                    _layers[i].svg[0][0].style.left = -(rect.width / 2) + 'px';
+                    _layers[i].svg[0][0].style.top = -(rect.height / 2) + 'px';
+
+                    //Update data to align with projection
+                    _layers[i].svg.selectAll('path').attr("d", _d3Projection);
+                }
+            }
+            
+            _center = map.getCenter();
+            _zoom = map.getZoom();
         }
     }
 
@@ -461,15 +514,8 @@ var rect = map.getRootElement().getBoundingClientRect();
         return layerInfo;
     };
 
-    this.removeLayer = function (layer) {
-		debugger;
-        for (var i = 0; i < _layers.length; i++) {
-            if (_layers[i].id == layer.id) {
-                _d3Container.removeChild(layer.svg[0][0]);
-                _layers.splice(i, 1);
-                break;
-            }
-        }
+    this.clearLayers = function () {
+        _layers.splice(0, _layers.map(x => x.svg[0][0].parentElement.remove()).length);
     };
 
     _init();
@@ -477,4 +523,3 @@ var rect = map.getRootElement().getBoundingClientRect();
 
 // Call the Module Loaded method
 //Microsoft.Maps.moduleLoaded('D3OverlayModule');
-
