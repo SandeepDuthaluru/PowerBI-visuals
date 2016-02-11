@@ -186,6 +186,7 @@ module powerbi.visuals {
         private countiesLayer: any;
         private selectedDistricts = '';
         private selectedMandals = '';
+		private static isMapLoaded: boolean = false;
         //private svg: D3.Selection;
         
         /** This is called once when the visual is initialially created */
@@ -224,8 +225,9 @@ module powerbi.visuals {
                     });
                     
                     var tiledownloadcompleteId = Microsoft.Maps.Events.addHandler(this.map, 'tiledownloadcomplete', () => {
-                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);
+                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);						
                         this.loadCounties();
+                        APDistrictMap.isMapLoaded = true;						
                     }); 
 				}).fail(x => {
 					alert('Request failed.  Returned status of ' + x);
@@ -250,7 +252,7 @@ module powerbi.visuals {
                            //alert(feature.properties["Mandal"]);
                        });
                 }
-            });
+            });            
         }
         
         public ApplyFilter() {
@@ -335,6 +337,9 @@ module powerbi.visuals {
             
             this.selectedMandals = '';
             
+			if(APDistrictMap.isMapLoaded) {
+            debugger;
+            //alert('Hi');
             for (var distRow in options.dataViews[0].table.rows) // for acts as a foreach
             { 
                 if(this.selectedMandals === '' || this.selectedMandals === undefined || this.selectedMandals === null)
@@ -346,8 +351,10 @@ module powerbi.visuals {
                     this.selectedMandals = this.selectedMandals + ',' + options.dataViews[0].table.rows[distRow][0];
                 }
             }
+			this.ApplyFilter(); 
+			}
             var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));
-            this.ApplyFilter();     
+                
         }
 
         private updateContainerViewports(viewport: IViewport) {
