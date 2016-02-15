@@ -72,9 +72,9 @@
                 fill: rgba(255, 0, 0, 0.5);
             }
             .counties {
-            fill: hotpink;
-            stroke: rgba(256, 256, 256, 2);
-            stroke-width: .5px;
+            fill: rgba(195, 252, 129, 0.5);
+            stroke: rgba(256, 256, 256, .5);
+            stroke-width: .1px;
             stroke-linejoin: round;
         }
 
