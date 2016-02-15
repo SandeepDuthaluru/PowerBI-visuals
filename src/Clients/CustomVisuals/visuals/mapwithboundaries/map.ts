@@ -261,7 +261,7 @@ module powerbi.visuals {
                     svg.selectAll('path')
                        .data(this.geoJson)
                        .enter().append('path')
-                       .attr('class', 'counties')
+                       .attr('class', 'region')
                        .attr('d', projection)
                        .on('click', (feature) => {
                            //alert(feature.properties["Mandal"]);
