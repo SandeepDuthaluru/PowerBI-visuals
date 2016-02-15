@@ -16,7 +16,7 @@ module powerbi.visuals {
         values: ValueViewModel[];
     }
 
-    export class APDistrictMap implements IVisual {        
+    export class RegionMap implements IVisual {        
         public static capabilities: VisualCapabilities = {
             dataRoles: [
                 {
@@ -180,24 +180,46 @@ module powerbi.visuals {
         private hostContainer: JQuery;
 		private colorPalette: IDataColorPalette;
 		private content: JQuery;
-		private topoData: any;
+		private geoJson: any;
         private d3MapTools: any;
         private map: any;
         private countiesLayer: any;
         private selectedDistricts = '';
         private selectedMandals = '';
 		private static isMapLoaded: boolean = false;
+		private mapState = 'UnInitiated';		
         //private svg: D3.Selection;
         
         /** This is called once when the visual is initialially created */
         public init(options: VisualInitOptions): void {
+		if(this.mapState === 'UnInitiated')
+		{			
             this.colorPalette = options.style.colorPalette.dataColors;
             // element is the element in which your visual will be hosted.
             this.hostContainer = options.element.css('overflow-x', 'hidden');                                                                                                                                                                                                                 
-        this.content = $("<div>").appendTo(options.element).css("position", "relative");
-       this.loadScripts(() => {
+			this.content = $("<div>").appendTo(options.element).css("position", "relative");
+			this.mapState = 'Initiated';
+			this.loadScripts(() => {
                debugger;
-               var jsondata = "";                              
+			   this.map = new Microsoft.Maps.Map(this.content[0], {
+                                                credentials: 'AsLj_okjJSBjbOnCP3C7E_opWa8qmtwmWV69nblODwur1a7Hq0_G4SWbm9rcpUgq',
+                                                center: new Microsoft.Maps.Location(16.5000, 80.6400),
+                                                zoom: 6
+                    });
+                    
+                    var tiledownloadcompleteId = Microsoft.Maps.Events.addHandler(this.map, 'tiledownloadcomplete', () => {
+                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);						
+                        this.getRegionGeoJson();
+                        RegionMap.isMapLoaded = true;												
+                    });                                 			 
+        	});
+			}
+        }
+        
+		private getRegionGeoJson()
+		{		
+			//if(this.mapState === 'ScriptsLoaded' || this.mapState === 'Updated')
+			//{		
 			   var params = "lstDistrict=&lstMandal=";
                if(this.selectedMandals !== undefined)
                {
@@ -216,26 +238,19 @@ module powerbi.visuals {
                    dataType: 'jsonp',   //you may use jsonp for cross origin request
                    crossDomain: true,                                     
 				}).done(x => {
-					//this.topoData = JSON.parse(x);
-                    this.topoData = x;
-                    this.map = new Microsoft.Maps.Map(this.content[0], {
-                                                credentials: 'AsLj_okjJSBjbOnCP3C7E_opWa8qmtwmWV69nblODwur1a7Hq0_G4SWbm9rcpUgq',
-                                                center: new Microsoft.Maps.Location(16.5000, 80.6400),
-                                                zoom: 6
-                    });
-                    
-                    var tiledownloadcompleteId = Microsoft.Maps.Events.addHandler(this.map, 'tiledownloadcomplete', () => {
-                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);						
-                        this.loadCounties();
-                        APDistrictMap.isMapLoaded = true;						
-                    }); 
+					//this.geoJson = JSON.parse(x);
+                    this.geoJson = x;
+					this.mapState = 'SelectedRegionsLoaded';
+					this.loadSelectedRegions();				    
 				}).fail(x => {
 					alert('Request failed.  Returned status of ' + x);
-				});                 			   
-        	});
-        }
-        
-        public loadCounties() {
+				});
+			//}
+		}
+		
+        private loadSelectedRegions() {
+		//if(this.mapState === 'SelectedRegionsLoaded')
+			//{
             if(this.d3MapTools) {
                 this.d3MapTools.clearLayers();
             }
@@ -244,71 +259,54 @@ module powerbi.visuals {
             this.countiesLayer = this.d3MapTools.addLayer({
                 loaded: (svg, projection) => {
                     svg.selectAll('path')
-                       .data(this.topoData)
+                       .data(this.geoJson)
                        .enter().append('path')
                        .attr('class', 'counties')
                        .attr('d', projection)
                        .on('click', (feature) => {
                            //alert(feature.properties["Mandal"]);
                        });
+					   this.mapState = 'SelectedRegionsUpdated';
                 }
-            });            
-        }
-        
-        public ApplyFilter() {
-            debugger;
-            var jsondata = "";               
-               var params = "lstDistrict=&lstMandal=";
-               if(this.selectedMandals !== undefined)
-               {
-                   if(this.selectedMandals.indexOf('India Standard Time') > 0)
-                   {
-                    
-                   }
-                   else
-                   {
-                       params = "lstDistrict=&lstMandal=" + this.selectedMandals;
-                   }
-               }			   
-			   $.ajax({
-				   url: 'https://geojsonapi.azurewebsites.net/api/filter/' + "?" + params, 
-				   async: true,
-                   dataType: 'jsonp',   //you may use jsonp for cross origin request
-                   crossDomain: true,                                     
-				}).done(x => {
-					//this.topoData = JSON.parse(x);
-                    this.topoData = x;
-                });
-                this.loadCounties();                
+            }); 
+			//}			
         }
 		
-        public loadScripts(onScriptsLoaded: () => void) {		
-            if(APDistrictMap.scriptsLoaded) {
-                onScriptsLoaded();
-                return;
-            }
-			
-            APDistrictMap.scriptsLoaded = true;
-            $.when(
-                                $.getScript('https://d3js.org/d3.v3.min.js'),
-                                $.getScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.20/topojson.js'),
-                                $.getScript("https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"),
-                                $.Deferred(( deferred ) => $( deferred.resolve ))
-                    ).done(() => {
-				(function onModulesLoaded() {
-					if(!Microsoft.Maps.registerModule) {
-						return setTimeout(onModulesLoaded, 10);
-					}
-						
-					Microsoft.Maps.registerModule("D3OverlayModule", D3OverlayManager);
-		            Microsoft.Maps.loadModule("D3OverlayModule");
+        private loadScripts(onScriptsLoaded: () => void) {	
+			//if(this.mapState === 'Initiated')
+			//{
+				if(RegionMap.scriptsLoaded) 
+				{
 					onScriptsLoaded();
-				})();
-            });
+					return;
+				}
+			            
+            $.when(
+                    $.getScript('https://d3js.org/d3.v3.min.js'),
+                    $.getScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.20/topojson.js'),
+                    $.getScript("https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"),
+                    $.Deferred(( deferred ) => $( deferred.resolve ))
+                    ).done(() => {
+						(function onModulesLoaded() {
+							if(!Microsoft.Maps.registerModule) {                                
+								return setTimeout(onModulesLoaded, 10);
+							}
+						
+							Microsoft.Maps.registerModule("D3OverlayModule", D3OverlayManager);
+							Microsoft.Maps.loadModule("D3OverlayModule");
+							RegionMap.scriptsLoaded = true;                            
+							onScriptsLoaded();
+							})();					
+					});
+					this.mapState = 'ScriptsLoaded';
+			//}
         }
 
         /** Update is called for data updates, resizes & formatting changes */
         public update(options: VisualUpdateOptions) {
+        debugger;
+		//if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated')
+		//{
             var dataViews = options.dataViews;
              //debugger;
             /*
@@ -326,7 +324,7 @@ module powerbi.visuals {
 
             this.updateContainerViewports(options.viewport);
 
-            var viewModel = APDistrictMap.converter(dataViews[0], this.colorPalette);
+            var viewModel = RegionMap.converter(dataViews[0], this.colorPalette);
             
             debugger;
             
@@ -337,10 +335,9 @@ module powerbi.visuals {
             
             this.selectedMandals = '';
             
-			if(APDistrictMap.isMapLoaded) {
-            debugger;
-            //alert('Hi');
-            for (var distRow in options.dataViews[0].table.rows) // for acts as a foreach
+			if(RegionMap.isMapLoaded) {
+            debugger;            
+            for (var distRow in options.dataViews[0].table.rows) 
             { 
                 if(this.selectedMandals === '' || this.selectedMandals === undefined || this.selectedMandals === null)
                 {
@@ -351,10 +348,11 @@ module powerbi.visuals {
                     this.selectedMandals = this.selectedMandals + ',' + options.dataViews[0].table.rows[distRow][0];
                 }
             }
-			this.ApplyFilter(); 
+			this.mapState = 'Updated';
+			this.getRegionGeoJson(); 
 			}
-            var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));
-                
+            var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));			
+            //}    
         }
 
         private updateContainerViewports(viewport: IViewport) {
