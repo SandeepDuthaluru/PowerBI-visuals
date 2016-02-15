@@ -334,8 +334,12 @@ module powerbi.visuals {
             //Here I need selected District's as well
             
             this.selectedMandals = '';
-            
+             
 			if(RegionMap.isMapLoaded) {
+			if(options.dataViews[0] !== undefined)
+			{
+			if(options.dataViews[0].categorical.categories[0].source.displayName === 'MANDAL')
+			 {
             debugger;            
             for (var distRow in options.dataViews[0].table.rows) 
             { 
@@ -347,9 +351,11 @@ module powerbi.visuals {
                 {
                     this.selectedMandals = this.selectedMandals + ',' + options.dataViews[0].table.rows[distRow][0];
                 }
-            }
+            }			 
+			}
+			}
 			this.mapState = 'Updated';
-			this.getRegionGeoJson(); 
+			this.getRegionGeoJson();
 			}
             var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));			
             //}    
