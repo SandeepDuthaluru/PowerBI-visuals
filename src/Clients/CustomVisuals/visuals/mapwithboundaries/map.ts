@@ -219,8 +219,8 @@ module powerbi.visuals {
         
 		private getRegionGeoJson()
 		{		
-			//if(this.mapState === 'ScriptsLoaded' || this.mapState === 'Updated')
-			//{		
+			if(this.mapState === 'ScriptsLoaded' || this.mapState === 'Updated')
+			{		
 			   var params = "";
 			   
 			   if(this.selectedDistricts !== undefined)
@@ -267,12 +267,12 @@ module powerbi.visuals {
 				}).fail(x => {
 					alert('Request failed.  Returned status of ' + x);
 				});
-			//}
+			}
 		}
 		
         private loadSelectedRegions() {
-		//if(this.mapState === 'SelectedRegionsLoaded')
-			//{
+		if(this.mapState === 'SelectedRegionsLoaded')
+			{
             if(this.d3MapTools) {
                 this.d3MapTools.clearLayers();
             }
@@ -291,12 +291,12 @@ module powerbi.visuals {
 					   this.mapState = 'SelectedRegionsUpdated';
                 }
             }); 
-			//}			
+			}			
         }
 		
         private loadScripts(onScriptsLoaded: () => void) {	
-			//if(this.mapState === 'Initiated')
-			//{
+			if(this.mapState === 'Initiated')
+			{
 				if(RegionMap.scriptsLoaded) 
 				{
 					onScriptsLoaded();
@@ -321,14 +321,14 @@ module powerbi.visuals {
 							})();					
 					});
 					this.mapState = 'ScriptsLoaded';
-			//}
+			}
         }
 
         /** Update is called for data updates, resizes & formatting changes */
         public update(options: VisualUpdateOptions) {
         debugger;
-		//if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated')
-		//{
+		if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated')
+		{
             var dataViews = options.dataViews;
              //debugger;
             /*
@@ -391,7 +391,7 @@ module powerbi.visuals {
 			this.getRegionGeoJson();
 			}
             var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));			
-            //}    
+            }    
         }
 
         private updateContainerViewports(viewport: IViewport) {
