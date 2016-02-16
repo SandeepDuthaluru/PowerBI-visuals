@@ -183,7 +183,7 @@ module powerbi.visuals {
 		private geoJson: any;
         private d3MapTools: any;
         private map: any;
-        private countiesLayer: any;
+        private regionLayer: any;
         private selectedDistricts = '';
         private selectedMandals = '';
 		private static isMapLoaded: boolean = false;
@@ -220,7 +220,24 @@ module powerbi.visuals {
 		{		
 			//if(this.mapState === 'ScriptsLoaded' || this.mapState === 'Updated')
 			//{		
-			   var params = "lstDistrict=&lstMandal=";
+			   var params = "";
+			   
+			   if(this.selectedDistricts !== undefined)
+               {
+                   if(this.selectedDistricts.indexOf('India Standard Time') > 0)
+                   {
+                    
+                   }
+                   else
+                   {		   
+						params = "lstDistrict=" + this.selectedDistricts;						
+                   }
+               }
+			   else
+			   {
+					params = "lstDistrict=";
+			   }
+			   
                if(this.selectedMandals !== undefined)
                {
                    if(this.selectedMandals.indexOf('India Standard Time') > 0)
@@ -228,10 +245,14 @@ module powerbi.visuals {
                     
                    }
                    else
-                   {
-                       params = "lstDistrict=&lstMandal=" + this.selectedMandals;
+                   {		   
+						params = params + "&lstMandal=" + this.selectedMandals;							
                    }
-               }			   
+               }
+			   else
+				{
+					params = params + "&lstMandal=";	
+				}			   
 			   $.ajax({
 				   url: 'https://geojsonapi.azurewebsites.net/api/filter/' + "?" + params, 
 				   async: true,
@@ -256,7 +277,7 @@ module powerbi.visuals {
             }
             debugger;                    
             this.d3MapTools = new D3OverlayManager(this.map);     
-            this.countiesLayer = this.d3MapTools.addLayer({
+            this.regionLayer = this.d3MapTools.addLayer({
                 loaded: (svg, projection) => {
                     svg.selectAll('path')
                        .data(this.geoJson)
@@ -326,21 +347,32 @@ module powerbi.visuals {
 
             var viewModel = RegionMap.converter(dataViews[0], this.colorPalette);
             
-            debugger;
-            
-			//options.dataViews[0].table.rows
-            this.selectedDistricts = '';
-            
-            //Here I need selected District's as well
-            
-            this.selectedMandals = '';
+            debugger;                      
              
 			if(RegionMap.isMapLoaded) {
 			if(options.dataViews[0] !== undefined)
 			{
+			if(options.dataViews[0].categorical.categories[0].source.displayName === 'DISTRICT')
+			 {
+            debugger;    
+			this.selectedDistricts = '';			
+            for (var distRow in options.dataViews[0].table.rows) 
+            { 
+                if(this.selectedDistricts === '' || this.selectedDistricts === undefined || this.selectedDistricts === null)
+                {
+                    this.selectedDistricts = options.dataViews[0].table.rows[distRow][0];
+                }
+                else
+                {
+                    this.selectedDistricts = this.selectedDistricts + ',' + options.dataViews[0].table.rows[distRow][0];
+                }
+            }			 
+			}
+			
 			if(options.dataViews[0].categorical.categories[0].source.displayName === 'MANDAL')
 			 {
-            debugger;            
+            debugger;     
+			this.selectedMandals = '';			
             for (var distRow in options.dataViews[0].table.rows) 
             { 
                 if(this.selectedMandals === '' || this.selectedMandals === undefined || this.selectedMandals === null)
