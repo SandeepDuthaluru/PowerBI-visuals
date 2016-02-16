@@ -204,6 +204,7 @@ module powerbi.visuals {
 			   this.map = new Microsoft.Maps.Map(this.content[0], {
                                                 credentials: 'AsLj_okjJSBjbOnCP3C7E_opWa8qmtwmWV69nblODwur1a7Hq0_G4SWbm9rcpUgq',
                                                 center: new Microsoft.Maps.Location(16.5000, 80.6400),
+                                                mapTypeId: Microsoft.Maps.MapTypeId.birdseye,
                                                 zoom: 6
                     });
                     
