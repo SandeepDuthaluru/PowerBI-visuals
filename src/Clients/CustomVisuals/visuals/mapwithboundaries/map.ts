@@ -209,8 +209,7 @@ module powerbi.visuals {
                     });
                     
                     var tiledownloadcompleteId = Microsoft.Maps.Events.addHandler(this.map, 'tiledownloadcomplete', () => {
-                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);						
-                        this.getRegionGeoJson();
+                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);						                        
                         RegionMap.isMapLoaded = true;												
                     });                                 			 
         	});
@@ -326,9 +325,7 @@ module powerbi.visuals {
 
         /** Update is called for data updates, resizes & formatting changes */
         public update(options: VisualUpdateOptions) {
-        debugger;
-		if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated')
-		{
+        debugger;		
             var dataViews = options.dataViews;
              //debugger;
             /*
@@ -349,7 +346,8 @@ module powerbi.visuals {
             var viewModel = RegionMap.converter(dataViews[0], this.colorPalette);
             
             debugger;                      
-             
+			if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated')
+			{
 			if(RegionMap.isMapLoaded) {
 			if(options.dataViews[0] !== undefined)
 			{
@@ -388,10 +386,13 @@ module powerbi.visuals {
 			}
 			}
 			this.mapState = 'Updated';
-			this.getRegionGeoJson();
+			}            			
+            }
+			var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));
+			if(this.mapState === 'Updated')
+			{
+				this.getRegionGeoJson();
 			}
-            var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));			
-            }    
         }
 
         private updateContainerViewports(viewport: IViewport) {
@@ -550,6 +551,7 @@ var D3OverlayManager = function (map) {
                 setTimeout(_initLayer, 100);
             }
         }
+
 
         _initLayer();
 
