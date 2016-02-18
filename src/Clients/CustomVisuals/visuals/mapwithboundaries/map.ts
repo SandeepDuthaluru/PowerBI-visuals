@@ -190,6 +190,7 @@ module powerbi.visuals {
 		private mapState = 'UnInitiated';	
 		private preSelectedDistricts = '';
         private preSelectedMandals = '';
+		private defaultGeoJson: any;
         //private svg: D3.Selection;
         
         /** This is called once when the visual is initialially created */
@@ -211,70 +212,112 @@ module powerbi.visuals {
                     });
                     
                     var tiledownloadcompleteId = Microsoft.Maps.Events.addHandler(this.map, 'tiledownloadcomplete', () => {
-                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);						                        
+                        Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);
+						this.getDefaultGeoJson();
                         RegionMap.isMapLoaded = true;												
                     });                                 			 
         	});
 			}
         }
+		
+		//get Default GeoJson from Web API
+		private getDefaultGeoJson()
+		{			
+				debugger;
+				var id = "";				
+				
+				$.ajax({
+				   url: 'https://geojsonapi.azurewebsites.net/api/mandal/' + "?" + id,
+				   async: true,
+                   dataType: 'jsonp',   
+                   crossDomain: true,                                     
+				}).done(x => {					
+                    this.defaultGeoJson = x;
+					this.mapState = 'GeoJsonLoaded';
+					//this.getRegionGeoJson();
+					//alert(this.defaultGeoJson);					
+				}).fail(x => {
+					console.log('Request failed.  Returned status of ' + x);
+				});							
+		}
         
 		private getRegionGeoJson()
 		{		
 			debugger;
-			if(this.mapState === 'ScriptsLoaded' || this.mapState === 'Updated')
-			{		
-			   var params = "";
-			   
-			   if(this.selectedDistricts !== undefined)
-               {
-                   if(this.selectedDistricts.indexOf('India Standard Time') > 0)
-                   {
-                    
-                   }
-                   else
-                   {		   
-						params = "lstDistrict=" + this.selectedDistricts;						
-                   }
-               }
-			   else
-			   {
-					params = "lstDistrict=";
-			   }
-			   
-               if(this.selectedMandals !== undefined)
-               {
-                   if(this.selectedMandals.indexOf('India Standard Time') > 0)
-                   {
-                    
-                   }
-                   else
-                   {		   
-						params = params + "&lstMandal=" + this.selectedMandals;							
-                   }
-               }
-			   else
+			if(this.defaultGeoJson != null)
+			{
+			var filteredData:any[] = [];				
+			
+			var ListOfDistrcits = this.selectedDistricts; //"Nellore,Anantapur";
+			var ListOfMandals = this.selectedMandals; //"Podalakur,Raptadu";	
+
+			//var ListOfDistrcits = "Nellore,Anantapur";
+			//var ListOfMandals = "Podalakur,Raptadu";
+			
+			for (var arrIndex in this.defaultGeoJson) 
+            {
+				if(ListOfDistrcits !== null && ListOfDistrcits !== undefined && ListOfDistrcits != '')
 				{
-					params = params + "&lstMandal=";	
-				}			   
-			   $.ajax({
-				   url: 'https://geojsonapi.azurewebsites.net/api/filter/' + "?" + params, 
-				   async: true,
-                   dataType: 'jsonp',   //you may use jsonp for cross origin request
-                   crossDomain: true,                                     
-				}).done(x => {
-					//this.geoJson = JSON.parse(x);
-                    this.geoJson = x;
-					this.mapState = 'SelectedRegionsLoaded';
-					this.loadSelectedRegions();				    
-				}).fail(x => {
-					alert('Request failed.  Returned status of ' + x);
-				});
+					var lstDistricts = ListOfDistrcits.split(",");
+					
+					for (var distIndex in lstDistricts) 
+					{
+						if(ListOfMandals !== null && ListOfMandals !== undefined && ListOfMandals != '')
+						{
+							var lstMandals = ListOfMandals.split(",");
+					
+							for (var mandalIndex in lstMandals) 
+							{
+								if (this.defaultGeoJson[arrIndex].properties.District == lstDistricts[distIndex] && this.defaultGeoJson[arrIndex].properties.Mandal == lstMandals[mandalIndex])
+								{									
+									filteredData.push(this.defaultGeoJson[arrIndex]);
+								}
+							}
+						}
+						else
+						{
+							if (this.defaultGeoJson[arrIndex].properties.District == lstDistricts[distIndex])
+							{
+								filteredData.push(this.defaultGeoJson[arrIndex]);
+							}
+						}
+						
+					}
+				}
+				else
+				{
+					if(ListOfMandals !== null && ListOfMandals !== undefined && ListOfMandals != '')
+						{
+							var lstMandals = ListOfMandals.split(",");
+					
+							for (var mandalIndex in lstMandals) 
+							{
+								if (this.defaultGeoJson[arrIndex].properties.Mandal == lstMandals[mandalIndex])
+								{
+									filteredData.push(this.defaultGeoJson[arrIndex]);
+								}
+							}
+						}
+					else
+						{
+							filteredData.push(this.defaultGeoJson[arrIndex]);
+						}
+				}								
+			}
+			
+            debugger;
+			
+            console.log(filteredData);
+                
+			this.geoJson = filteredData;
+			
+			this.loadSelectedRegions();
 			}
 		}
 		
         private loadSelectedRegions() {
-		if(this.mapState === 'SelectedRegionsLoaded')
-			{
+		//if(this.mapState === 'SelectedRegionsLoaded')
+			//{
             if(this.d3MapTools) {
                 this.d3MapTools.clearLayers();
             }
@@ -293,12 +336,12 @@ module powerbi.visuals {
                 }
             });
 			this.mapState = 'SelectedRegionsUpdated';			
-			}			
+			//}			
         }
 		
         private loadScripts(onScriptsLoaded: () => void) {	
-			if(this.mapState === 'Initiated')
-			{
+			//if(this.mapState === 'Initiated')
+			//{
 				if(RegionMap.scriptsLoaded) 
 				{
 					onScriptsLoaded();
@@ -321,7 +364,7 @@ module powerbi.visuals {
 							})();					
 					});
 					this.mapState = 'ScriptsLoaded';
-			}
+			//}
         }
 
         /** Update is called for data updates, resizes & formatting changes */
@@ -347,8 +390,8 @@ module powerbi.visuals {
             var viewModel = RegionMap.converter(dataViews[0], this.colorPalette);
             
             debugger;                      
-			if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated' || this.mapState === 'Updated')
-			{
+			//if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated' || this.mapState === 'Updated')
+			//{
 			if(RegionMap.isMapLoaded) {
 			if(options.dataViews[0] !== undefined)
 			{
@@ -385,20 +428,20 @@ module powerbi.visuals {
                 }
             }			 
 			}
-			this.mapState = 'Updated';
+			//this.mapState = 'Updated';
 			}			
 			}            			
-            }
+            //}
 			var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));
-			if(this.mapState === 'Updated')
-			{
-				if(this.preSelectedDistricts != this.selectedDistricts || this.preSelectedMandals != this.selectedMandals)
-				{
-					this.preSelectedDistricts = this.selectedDistricts;
-					this.preSelectedMandals = this.selectedMandals;
+			//if(this.mapState === 'Updated')
+			//{
+				//if(this.preSelectedDistricts != this.selectedDistricts || this.preSelectedMandals != this.selectedMandals)
+				//{
+					//this.preSelectedDistricts = this.selectedDistricts;
+					//this.preSelectedMandals = this.selectedMandals;
 					this.getRegionGeoJson();
-				}
-			}
+				//}
+			//}
         }
 
         private updateContainerViewports(viewport: IViewport) {
