@@ -186,8 +186,10 @@ module powerbi.visuals {
         private regionLayer: any;
         private selectedDistricts = '';
         private selectedMandals = '';
-		private static isMapLoaded: boolean = false;
-		private mapState = 'UnInitiated';		
+		private static isMapLoaded: boolean = false;		
+		private mapState = 'UnInitiated';	
+		private preSelectedDistricts = '';
+        private preSelectedMandals = '';
         //private svg: D3.Selection;
         
         /** This is called once when the visual is initialially created */
@@ -218,6 +220,7 @@ module powerbi.visuals {
         
 		private getRegionGeoJson()
 		{		
+			debugger;
 			if(this.mapState === 'ScriptsLoaded' || this.mapState === 'Updated')
 			{		
 			   var params = "";
@@ -286,10 +289,10 @@ module powerbi.visuals {
                        .attr('d', projection)
                        .on('click', (feature) => {
                            //alert(feature.properties["Mandal"]);
-                       });
-					   this.mapState = 'SelectedRegionsUpdated';
+                       });					   
                 }
-            }); 
+            });
+			this.mapState = 'SelectedRegionsUpdated';			
 			}			
         }
 		
@@ -302,9 +305,7 @@ module powerbi.visuals {
 					return;
 				}
 			            
-            $.when(
-                    $.getScript('https://d3js.org/d3.v3.min.js'),
-                    $.getScript('https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.20/topojson.js'),
+            $.when(                                       
                     $.getScript("https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"),
                     $.Deferred(( deferred ) => $( deferred.resolve ))
                     ).done(() => {
@@ -346,7 +347,7 @@ module powerbi.visuals {
             var viewModel = RegionMap.converter(dataViews[0], this.colorPalette);
             
             debugger;                      
-			if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated')
+			if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated' || this.mapState === 'Updated')
 			{
 			if(RegionMap.isMapLoaded) {
 			if(options.dataViews[0] !== undefined)
@@ -384,14 +385,19 @@ module powerbi.visuals {
                 }
             }			 
 			}
-			}
 			this.mapState = 'Updated';
+			}			
 			}            			
             }
 			var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));
 			if(this.mapState === 'Updated')
 			{
-				this.getRegionGeoJson();
+				if(this.preSelectedDistricts != this.selectedDistricts || this.preSelectedMandals != this.selectedMandals)
+				{
+					this.preSelectedDistricts = this.selectedDistricts;
+					this.preSelectedMandals = this.selectedMandals;
+					this.getRegionGeoJson();
+				}
 			}
         }
 
