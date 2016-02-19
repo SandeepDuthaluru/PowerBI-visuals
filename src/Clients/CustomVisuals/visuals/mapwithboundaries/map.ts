@@ -242,9 +242,7 @@ module powerbi.visuals {
 					this.regionLayer = this.d3MapTools.addLayer({
 						loaded: (svg, projection) => {
 					
-							this.mapSvg = svg.selectAll('path')
-								.data(this.defaultGeoJson)
-								.enter().append('path')
+							this.mapSvg = svg.selectAll('path')								
 								.attr('class', 'region')
 								.attr('d', projection)
 								.on('click', (feature) => {
@@ -339,6 +337,7 @@ module powerbi.visuals {
 						{														
 							this.mapSvg
 							.data(this.geoJson)
+							.enter().append('path')
 							.attr('class', 'region')
 							.attr('d', this.mapProjection)
 							.on('click', (feature) => {
