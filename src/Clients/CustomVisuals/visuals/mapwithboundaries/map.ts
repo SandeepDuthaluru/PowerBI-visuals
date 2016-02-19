@@ -192,6 +192,8 @@ module powerbi.visuals {
         private preSelectedMandals = '';
 		private defaultGeoJson: any;
         //private svg: D3.Selection;
+		private mapSvg: any;
+		private mapProjection: any;
         
         /** This is called once when the visual is initialially created */
         public init(options: VisualInitOptions): void {
@@ -233,13 +235,32 @@ module powerbi.visuals {
                    crossDomain: true,                                     
 				}).done(x => {					
                     this.defaultGeoJson = x;
-					this.mapState = 'GeoJsonLoaded';				
+					this.mapState = 'GeoJsonLoaded';
+
+					this.d3MapTools = new D3OverlayManager(this.map);
+			
+					this.regionLayer = this.d3MapTools.addLayer({
+						loaded: (svg, projection) => {
+					
+							this.mapSvg = svg.selectAll('path')
+								.data(this.defaultGeoJson)
+								.enter().append('path')
+								.attr('class', 'region')
+								.attr('d', projection)
+								.on('click', (feature) => {
+									//alert(feature.properties["Mandal"]);
+								});	
+					                    
+						this.mapProjection = projection;					
+						}
+					});
+				
 				}).fail(x => {
 					console.log('Request failed.  Returned status of ' + x);
 				});							
 		}
         
-		private getFilteredGeoJson()
+		private getRegionGeoJson()
 		{		
 			debugger;
 			if(this.defaultGeoJson !== null && this.defaultGeoJson !== undefined && this.defaultGeoJson !== '')
@@ -309,32 +330,21 @@ module powerbi.visuals {
                 
 			this.geoJson = filteredData;
 			
-			this.drawSelectedRegions();
+			this.loadSelectedRegions();
 			}
 		}
 		
-        private drawSelectedRegions() {
-		//if(this.mapState === 'SelectedRegionsLoaded')
-			//{
-            if(this.d3MapTools) {
-                this.d3MapTools.clearLayers();
-            }
-            debugger;                    
-            this.d3MapTools = new D3OverlayManager(this.map);     
-            this.regionLayer = this.d3MapTools.addLayer({
-                loaded: (svg, projection) => {
-                    svg.selectAll('path')
-                       .data(this.geoJson)
-                       .enter().append('path')
-                       .attr('class', 'region')
-                       .attr('d', projection)
-                       .on('click', (feature) => {
-                           //alert(feature.properties["Mandal"]);
-                       });					   
-                }
-            });
-			this.mapState = 'SelectedRegionsUpdated';			
-			//}			
+        private loadSelectedRegions() {
+            if(this.mapSvg != null || this.mapSvg !== undefined || this.mapSvg !== '')
+						{														
+							this.mapSvg
+							.data(this.geoJson)
+							.attr('class', 'region')
+							.attr('d', this.mapProjection)
+							.on('click', (feature) => {
+							
+							});
+						}		
         }
 		
         private loadScripts(onScriptsLoaded: () => void) {	
@@ -365,71 +375,82 @@ module powerbi.visuals {
 			//}
         }
 
-         /** Update is called for data updates, resizes & formatting changes */
- public update(options: VisualUpdateOptions) {
-     debugger;
-     var dataViews = options.dataViews;
-     //debugger;
-     /*
-     this.svg.attr({
-         'width': options.viewport.width,
-         'height': options.viewport.height
-     });
-     */
-     this.content.css({
-         'width': options.viewport.width,
-         'height': options.viewport.height
-     });
+        /** Update is called for data updates, resizes & formatting changes */
+        public update(options: VisualUpdateOptions) {
+			debugger;		
+            var dataViews = options.dataViews;
+             //debugger;
+            /*
+            this.svg.attr({
+                'width': options.viewport.width,
+                'height': options.viewport.height
+            });
+            */
+			this.content.css({
+                'width': options.viewport.width,
+                'height': options.viewport.height
+            });
 
-     if (!dataViews) return;
+            if (!dataViews) return;
 
-     this.updateContainerViewports(options.viewport);
+            this.updateContainerViewports(options.viewport);
 
-     var viewModel = RegionMap.converter(dataViews[0], this.colorPalette);
-
-     debugger;
-     //if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated' || this.mapState === 'Updated')
-     //{
-     if (RegionMap.isMapLoaded) {
-         if (options.dataViews[0] !== undefined) {
-             if (options.dataViews[0].categorical.categories[0].source.displayName === 'DISTRICT') {
-                 debugger;
-                 this.selectedDistricts = '';
-                 for (var distRow in options.dataViews[0].table.rows) {
-                     if (this.selectedDistricts === '' || this.selectedDistricts === undefined || this.selectedDistricts === null) {
-                         this.selectedDistricts = options.dataViews[0].table.rows[distRow][0];
-                     } else {
-                         this.selectedDistricts = this.selectedDistricts + ',' + options.dataViews[0].table.rows[distRow][0];
-                     }
-                 }
-             }
-
-             if (options.dataViews[0].categorical.categories[0].source.displayName === 'MANDAL') {
-                 debugger;
-                 this.selectedMandals = '';
-                 for (var distRow in options.dataViews[0].table.rows) {
-                     if (this.selectedMandals === '' || this.selectedMandals === undefined || this.selectedMandals === null) {
-                         this.selectedMandals = options.dataViews[0].table.rows[distRow][0];
-                     } else {
-                         this.selectedMandals = this.selectedMandals + ',' + options.dataViews[0].table.rows[distRow][0];
-                     }
-                 }
-             }
-             //this.mapState = 'Updated';
-         }
-     }
-     //}
-     var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));
-     //if(this.mapState === 'Updated')
-     //{
-     //if(this.preSelectedDistricts != this.selectedDistricts || this.preSelectedMandals != this.selectedMandals)
-     //{
-     //this.preSelectedDistricts = this.selectedDistricts;
-     //this.preSelectedMandals = this.selectedMandals;
-     this.getFilteredGeoJson();
-     //}
-     //}
- }
+            var viewModel = RegionMap.converter(dataViews[0], this.colorPalette);
+            
+            debugger;                      
+			//if(this.mapState === 'ScriptsLoaded' || this.mapState === 'SelectedRegionsUpdated' || this.mapState === 'Updated')
+			//{
+			if(RegionMap.isMapLoaded) {
+			if(options.dataViews[0] !== undefined)
+			{
+			if(options.dataViews[0].categorical.categories[0].source.displayName === 'DISTRICT')
+			 {
+            debugger;    
+			this.selectedDistricts = '';			
+            for (var distRow in options.dataViews[0].table.rows) 
+            { 
+                if(this.selectedDistricts === '' || this.selectedDistricts === undefined || this.selectedDistricts === null)
+                {
+                    this.selectedDistricts = options.dataViews[0].table.rows[distRow][0];
+                }
+                else
+                {
+                    this.selectedDistricts = this.selectedDistricts + ',' + options.dataViews[0].table.rows[distRow][0];
+                }
+            }			 
+			}
+			
+			if(options.dataViews[0].categorical.categories[0].source.displayName === 'MANDAL')
+			 {
+            debugger;     
+			this.selectedMandals = '';			
+            for (var distRow in options.dataViews[0].table.rows) 
+            { 
+                if(this.selectedMandals === '' || this.selectedMandals === undefined || this.selectedMandals === null)
+                {
+                    this.selectedMandals = options.dataViews[0].table.rows[distRow][0];
+                }
+                else
+                {
+                    this.selectedMandals = this.selectedMandals + ',' + options.dataViews[0].table.rows[distRow][0];
+                }
+            }			 
+			}
+			//this.mapState = 'Updated';
+			}			
+			}            			
+            //}
+			var transposedSeries = d3.transpose(viewModel.values.map(d => d.values.map(d => d)));
+			//if(this.mapState === 'Updated')
+			//{
+				//if(this.preSelectedDistricts != this.selectedDistricts || this.preSelectedMandals != this.selectedMandals)
+				//{
+					//this.preSelectedDistricts = this.selectedDistricts;
+					//this.preSelectedMandals = this.selectedMandals;
+					this.getRegionGeoJson();
+				//}
+			//}
+        }
 
         private updateContainerViewports(viewport: IViewport) {
             //var width = viewport.width;
