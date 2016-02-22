@@ -327,15 +327,12 @@ module powerbi.visuals {
 			}
 		}
 		
-        private loadSelectedRegions() {
-            if(this.mapSvg != null || this.mapSvg !== undefined || this.mapSvg !== '')
-						{														
-							debugger;							
-							var updateSelection = this.mapSvg.selectAll("path").data(this.geoJson)
-							updateSelection.enter().append("path").attr('class', 'region')
-							updateSelection.attr('d', this.mapProjection)
-							updateSelection.exit().remove()
-						}		
+        private loadSelectedRegions() {            												
+				//debugger;							
+				var updateSelection = this.mapSvg.selectAll("path").data(this.geoJson)
+				updateSelection.enter().append("path").attr('class', 'region')
+				updateSelection.attr('d', this.mapProjection)
+				updateSelection.exit().remove()					
         }
 		
         private loadScripts(onScriptsLoaded: () => void) {	
@@ -438,7 +435,10 @@ module powerbi.visuals {
 				//{
 					//this.preSelectedDistricts = this.selectedDistricts;
 					//this.preSelectedMandals = this.selectedMandals;
-					this.getRegionGeoJson();
+					if(this.mapSvg != null || this.mapSvg !== undefined || this.mapSvg !== '')
+						{
+							this.getRegionGeoJson();
+						}
 				//}
 			//}
         }
