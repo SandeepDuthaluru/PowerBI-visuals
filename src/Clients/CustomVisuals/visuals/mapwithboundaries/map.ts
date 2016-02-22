@@ -435,7 +435,8 @@ module powerbi.visuals {
 				//{
 					//this.preSelectedDistricts = this.selectedDistricts;
 					//this.preSelectedMandals = this.selectedMandals;
-					if(this.mapSvg != null || this.mapSvg !== undefined || this.mapSvg !== '')
+					debugger;
+					if(this.mapSvg !== null && this.mapSvg !== undefined && this.mapSvg !== '')
 						{
 							this.getRegionGeoJson();
 						}
