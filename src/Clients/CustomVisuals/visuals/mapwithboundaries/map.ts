@@ -242,12 +242,7 @@ module powerbi.visuals {
 					this.regionLayer = this.d3MapTools.addLayer({
 						loaded: (svg, projection) => {
 					
-							this.mapSvg = svg.selectAll('path')								
-								.attr('class', 'region')
-								.attr('d', projection)
-								.on('click', (feature) => {
-									//alert(feature.properties["Mandal"]);
-								});	
+						this.mapSvg = svg;	
 					                    
 						this.mapProjection = projection;					
 						}
@@ -324,7 +319,7 @@ module powerbi.visuals {
 			
             debugger;
 			
-            console.log(filteredData);
+            //console.log(filteredData);
                 
 			this.geoJson = filteredData;
 			
@@ -335,14 +330,11 @@ module powerbi.visuals {
         private loadSelectedRegions() {
             if(this.mapSvg != null || this.mapSvg !== undefined || this.mapSvg !== '')
 						{														
-							this.mapSvg
-							.data(this.geoJson)
-							.enter().append('path')
-							.attr('class', 'region')
-							.attr('d', this.mapProjection)
-							.on('click', (feature) => {
-							
-							});
+							debugger;							
+							var updateSelection = this.mapSvg.selectAll("path").data(this.geoJson)
+							updateSelection.enter().append("path").attr('class', 'region')
+							updateSelection.attr('d', this.mapProjection)
+							updateSelection.exit().remove()
 						}		
         }
 		
