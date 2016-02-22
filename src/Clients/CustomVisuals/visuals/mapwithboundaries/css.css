@@ -81,6 +81,14 @@
             .region:hover {
                 fill: rgba(25, 152, 129, 0.2);
             }
+			
+			.oldregion {
+            fill: white;
+            stroke: rgba(256, 256, 256, .5);
+            stroke-width: .1px;
+            stroke-linejoin: round;
+			}
+			
 .hidden {
         display: none;
     }
