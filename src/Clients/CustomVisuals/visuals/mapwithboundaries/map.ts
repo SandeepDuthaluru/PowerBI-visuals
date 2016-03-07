@@ -22,18 +22,7 @@ module powerbi.visuals {
                 {
                     name: 'Category',
                     kind: VisualDataRoleKind.Grouping,
-                    displayName: data.createDisplayNameGetter('Role_DisplayName_Location'),
-                    preferredTypes: [
-                        { geography: { address: true } },
-                        { geography: { city: true } },
-                        { geography: { continent: true } },
-                        { geography: { country: true } },
-                        { geography: { county: true } },
-                        { geography: { place: true } },
-                        { geography: { postalCode: true } },
-                        { geography: { region: true } },
-                        { geography: { stateOrProvince: true } },
-                    ],
+                    displayName: data.createDisplayNameGetter('Role_DisplayName_Location'),                    
                 },
                 {
                     name: 'Height',
@@ -242,7 +231,7 @@ module powerbi.visuals {
 					this.regionLayer = this.d3MapTools.addLayer({
 						loaded: (svg, projection) => {
 					
-						this.mapSvg = svg;	
+						this.mapSvg = svg;														
 					                    
 						this.mapProjection = projection;					
 						}
@@ -328,11 +317,30 @@ module powerbi.visuals {
 		}
 		
         private loadSelectedRegions() {            												
-				//debugger;							
-				var updateSelection = this.mapSvg.selectAll("path").data(this.geoJson)
-				updateSelection.enter().append("path").attr('class', 'region')
+				//debugger;								
+				var div = d3.select("body").append("div")	
+				.attr("class", "tooltip")				
+				.style("opacity", 0);
+				
+				var updateSelection = this.mapSvg.selectAll("path").data(this.geoJson)				
+				updateSelection.enter().append("path").attr('class', 'region')				
 				updateSelection.attr('d', this.mapProjection)
-				updateSelection.exit().remove()					
+				updateSelection.exit().remove()	
+
+				updateSelection.on("mouseover", function(d) {				
+										
+				div.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+				div.html(d.properties.Mandal)
+				.style("left", (d3.event.clientX) + "px")		
+                .style("top", (d3.event.clientY - 28) + "px");;	           
+
+				}).on("mouseout", function() {
+					 div.transition()		
+                	.duration(500)		
+                	.style("opacity", 0);
+				})				
         }
 		
         private loadScripts(onScriptsLoaded: () => void) {	
