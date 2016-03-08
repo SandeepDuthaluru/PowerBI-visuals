@@ -20,114 +20,39 @@ module powerbi.visuals {
         public static capabilities: VisualCapabilities = {
             dataRoles: [
                 {
-                    name: 'Category',
+                    name: 'DISTRICT',
                     kind: VisualDataRoleKind.Grouping,
-                    displayName: data.createDisplayNameGetter('Role_DisplayName_Location'),                    
+                    displayName: 'DISTRICT',                    
                 },
                 {
-                    name: 'Height',
-                    kind: VisualDataRoleKind.Measure,
-                    displayName: 'Bar Height',
-                },
-                {
-                    name: 'Heat',
-                    kind: VisualDataRoleKind.Measure,
-                    displayName: 'Heat Intensity',
+                    name: 'MANDAL',
+                    kind: VisualDataRoleKind.Grouping,
+                    displayName: 'MANDAL', 
                 }
-            ],
-            objects: {
-                general: {
-                    displayName: data.createDisplayNameGetter('Visual_General'),
-                    properties: {
-                        formatString: {
-                            type: { formatting: { formatString: true } },
-                        },
-                    },
-                },
-                legend: {
-                    displayName: data.createDisplayNameGetter('Visual_Legend'),
-                    properties: {
-                        show: {
-                            displayName: data.createDisplayNameGetter('Visual_Show'),
-                            type: { bool: true }
-                        },
-                        position: {
-                            displayName: data.createDisplayNameGetter('Visual_LegendPosition'),
-                            type: { formatting: { legendPosition: true } }
-                        },
-                        showTitle: {
-                            displayName: data.createDisplayNameGetter('Visual_LegendShowTitle'),
-                            type: { bool: true }
-                        },
-                        titleText: {
-                            displayName: data.createDisplayNameGetter('Visual_LegendTitleText'),
-                            type: { text: true }
-                        }
-                    }
-                },
-                dataPoint: {
-                    displayName: data.createDisplayNameGetter('Visual_DataPoint'),
-                    properties: {
-                        defaultColor: {
-                            displayName: data.createDisplayNameGetter('Visual_DefaultColor'),
-                            type: { fill: { solid: { color: true } } }
-                        },
-                        showAllDataPoints: {
-                            displayName: data.createDisplayNameGetter('Visual_DataPoint_Show_All'),
-                            type: { bool: true }
-                        },
-                        fill: {
-                            displayName: data.createDisplayNameGetter('Visual_Fill'),
-                            type: { fill: { solid: { color: true } } }
-                        },
-                        fillRule: {
-                            displayName: data.createDisplayNameGetter('Visual_Gradient'),
-                            type: { fillRule: {} },
-                            rule: {
-                                inputRole: 'Gradient',
-                                output: {
-                                    property: 'fill',
-                                    selector: ['Category'],
-                                },
-                            },
-                        }
-                    }
-                },
-                categoryLabels: {
-                    displayName: data.createDisplayNameGetter('Visual_CategoryLabels'),
-                    properties: {
-                        show: {
-                            displayName: data.createDisplayNameGetter('Visual_Show'),
-                            type: { bool: true }
-                        },
-                        color: {
-                            displayName: data.createDisplayNameGetter('Visual_LabelsFill'),
-                            type: { fill: { solid: { color: true } } }
-                        },
-                    },
-                },
-            },
+            ],            
             dataViewMappings: [{
                 conditions: [
-                    { 'Category': { max: 1 }, 'Height': { max: 1 }, 'Heat': { max: 1 } },
+                    { 'DISTRICT': { max: 1 } },
                 ],
                 categorical: {
                     categories: {
-                        for: { in: 'Category' },
+                        for: { in: 'DISTRICT' },
                         dataReductionAlgorithm: { top: {} }
                     },
                     values: {
                         select: [
-                            { bind: { to: 'Height' } },
-                            { bind: { to: 'Heat' } },
+                            { bind: { to: 'MANDAL' } },
                         ]
                     },
-                    rowCount: { preferred: { min: 2 } }
+                    rowCount: { preferred: { min: 1 } }
                 },
             }],
             sorting: {
                 custom: {},
-            }
+            },
+			drilldown: {
+            roles: ['DISTRICT']
+			}
         };    
 		
 		public static converter(dataView: DataView, colors: IDataColorPalette): ViewModel {
@@ -183,6 +108,7 @@ module powerbi.visuals {
         //private svg: D3.Selection;
 		private mapSvg: any;
 		private mapProjection: any;
+		private mapTooltip: any;
         
         /** This is called once when the visual is initialially created */
         public init(options: VisualInitOptions): void {
@@ -204,7 +130,7 @@ module powerbi.visuals {
                     
                     var tiledownloadcompleteId = Microsoft.Maps.Events.addHandler(this.map, 'tiledownloadcomplete', () => {
                         Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);
-						this.getDefaultGeoJson();
+						this.getDefaultGeoJson();						
                         RegionMap.isMapLoaded = true;												
                     });                                 			 
         	});
@@ -317,7 +243,7 @@ module powerbi.visuals {
 		}
 		
         private loadSelectedRegions() {            												
-				//debugger;								
+				//debugger;												
 				var div = d3.select("body").append("div")	
 				.attr("class", "tooltip")				
 				.style("opacity", 0);
@@ -386,7 +312,7 @@ module powerbi.visuals {
                 'width': options.viewport.width,
                 'height': options.viewport.height
             });
-
+			console.log(JSON.stringify(dataViews));
             if (!dataViews) return;
 
             this.updateContainerViewports(options.viewport);
