@@ -107,8 +107,7 @@ module powerbi.visuals {
 		private defaultGeoJson: any;
         //private svg: D3.Selection;
 		private mapSvg: any;
-		private mapProjection: any;
-		private mapTooltip: any;
+		private mapProjection: any;		
         
         /** This is called once when the visual is initialially created */
         public init(options: VisualInitOptions): void {
@@ -131,6 +130,8 @@ module powerbi.visuals {
                     var tiledownloadcompleteId = Microsoft.Maps.Events.addHandler(this.map, 'tiledownloadcomplete', () => {
                         Microsoft.Maps.Events.removeHandler(tiledownloadcompleteId);
 						this.getDefaultGeoJson();						
+						this.selectedDistricts = '';
+						this.selectedMandals = ''
                         RegionMap.isMapLoaded = true;												
                     });                                 			 
         	});
@@ -325,8 +326,8 @@ module powerbi.visuals {
 			if(RegionMap.isMapLoaded) {
 			if(options.dataViews[0] !== undefined)
 			{
-			if(options.dataViews[0].categorical.categories[0].source.displayName === 'DISTRICT')
-			 {
+			//if(options.dataViews[0].categorical.categories[0].source.displayName === 'DISTRICT')
+			 //{
             debugger;    
 			this.selectedDistricts = '';			
             for (var distRow in options.dataViews[0].table.rows) 
@@ -337,27 +338,30 @@ module powerbi.visuals {
                 }
                 else
                 {
-                    this.selectedDistricts = this.selectedDistricts + ',' + options.dataViews[0].table.rows[distRow][0];
+					if(this.selectedDistricts.toString().indexOf(options.dataViews[0].table.rows[distRow][0]) === -1)
+					{
+						this.selectedDistricts = this.selectedDistricts + ',' + options.dataViews[0].table.rows[distRow][0];
+					}
                 }
             }			 
-			}
+			//}
 			
-			if(options.dataViews[0].categorical.categories[0].source.displayName === 'MANDAL')
-			 {
+			//if(options.dataViews[0].categorical.categories[0].source.displayName === 'MANDAL')
+			 //{
             debugger;     
 			this.selectedMandals = '';			
             for (var distRow in options.dataViews[0].table.rows) 
             { 
                 if(this.selectedMandals === '' || this.selectedMandals === undefined || this.selectedMandals === null)
                 {
-                    this.selectedMandals = options.dataViews[0].table.rows[distRow][0];
+                    this.selectedMandals = options.dataViews[0].table.rows[distRow][1];
                 }
                 else
                 {
-                    this.selectedMandals = this.selectedMandals + ',' + options.dataViews[0].table.rows[distRow][0];
+                    this.selectedMandals = this.selectedMandals + ',' + options.dataViews[0].table.rows[distRow][1];
                 }
             }			 
-			}
+			//}
 			//this.mapState = 'Updated';
 			}			
 			}            			
