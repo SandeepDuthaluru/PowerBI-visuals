@@ -107,7 +107,9 @@ module powerbi.visuals {
 		private defaultGeoJson: any;
         //private svg: D3.Selection;
 		private mapSvg: any;
-		private mapProjection: any;		
+		private mapProjection: any;
+		private mapLatitude: any;
+		private mapLongitude: any;
         
         /** This is called once when the visual is initialially created */
         public init(options: VisualInitOptions): void {
@@ -122,7 +124,7 @@ module powerbi.visuals {
                debugger;
 			   this.map = new Microsoft.Maps.Map(this.content[0], {
                                                 credentials: 'AsLj_okjJSBjbOnCP3C7E_opWa8qmtwmWV69nblODwur1a7Hq0_G4SWbm9rcpUgq',
-                                                center: new Microsoft.Maps.Location(16.5000, 80.6400),
+                                                center: new Microsoft.Maps.Location(16.4973, 80.64112),
                                                 mapTypeId: Microsoft.Maps.MapTypeId.birdseye,
                                                 zoom: 6
                     });
@@ -267,7 +269,24 @@ module powerbi.visuals {
 					 div.transition()		
                 	.duration(500)		
                 	.style("opacity", 0);
-				})				
+				})
+			
+			var viewBoundaries = Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(16.4973, 80.64112));
+			
+			if(this.selectedDistricts.split(",").length === 13)
+			{
+				this.map.setView({ bounds: viewBoundaries});				
+				this.map.setView({zoom:6});
+			}
+			else
+			{
+				if(this.mapLatitude !== undefined && this.mapLatitude !== '' && this.mapLatitude !== null && this.mapLongitude !== undefined && this.mapLongitude !== '' && this.mapLongitude !== null)
+				{
+					viewBoundaries = Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(this.mapLatitude, this.mapLongitude));
+					this.map.setView({ bounds: viewBoundaries});				
+					this.map.setView({zoom:8});
+				}
+			}
         }
 		
         private loadScripts(onScriptsLoaded: () => void) {	
@@ -297,6 +316,62 @@ module powerbi.visuals {
 					this.mapState = 'ScriptsLoaded';
 			//}
         }
+		
+		private getLatLongOfRegion(regionName: string)
+		{			
+			if(regionName === 'Anantapur')
+			{
+				return '14.482697,77.578789';
+			}			
+			else if(regionName === 'Chittoor')
+			{
+				return '13.2000,79.1167';
+			}
+			else if(regionName === 'Cuddapah')
+			{
+				return '14.4667,78.8167';
+			}
+			else if(regionName === 'East Godavari')
+			{
+				return '16.9500,82.2500';
+			}
+			else if(regionName === 'Guntur')
+			{
+				return '16.3008,80.4428';
+			}
+			else if(regionName === 'Krishna')
+			{
+				return '16.1700,81.1300';
+			}
+			else if(regionName === 'Kurnool')
+			{
+				return '15.8300,78.0500';
+			}
+			else if(regionName === 'Nellore')
+			{
+				return '14.4330,80.0000';
+			}
+			else if(regionName === 'Prakasam')
+			{
+				return '15.5000,80.0500';
+			}
+			else if(regionName === 'Srikakulam')
+			{
+				return '18.3000,83.9000';
+			}
+			else if(regionName === 'Visakhapatnam')
+			{
+				return '17.6883,83.2186';
+			}
+			else if(regionName === 'Vizianagaram')
+			{
+				return '18.1200,83.4200';
+			}
+			else if(regionName === 'West Godavari')
+			{
+				return '16.9167,81.3333';
+			}
+		}
 
         /** Update is called for data updates, resizes & formatting changes */
         public update(options: VisualUpdateOptions) {
@@ -329,21 +404,37 @@ module powerbi.visuals {
 			//if(options.dataViews[0].categorical.categories[0].source.displayName === 'DISTRICT')
 			 //{
             debugger;    
-			this.selectedDistricts = '';			
+			this.selectedDistricts = '';
+			
             for (var distRow in options.dataViews[0].table.rows) 
-            { 
+            { 		
+				var latlongOfDistrict = this.getLatLongOfRegion(options.dataViews[0].table.rows[distRow][0]).split(",");
+				
                 if(this.selectedDistricts === '' || this.selectedDistricts === undefined || this.selectedDistricts === null)
                 {
+					
+					this.mapLatitude = parseFloat(latlongOfDistrict[0]);
+					this.mapLongitude = parseFloat(latlongOfDistrict[1]);
+					
                     this.selectedDistricts = options.dataViews[0].table.rows[distRow][0];
                 }
                 else
                 {
 					if(this.selectedDistricts.toString().indexOf(options.dataViews[0].table.rows[distRow][0]) === -1)
 					{
+						
+						this.mapLatitude = parseFloat(this.mapLatitude) + parseFloat(latlongOfDistrict[0]);
+						this.mapLongitude = parseFloat(this.mapLongitude) + parseFloat(latlongOfDistrict[1]);
+						
 						this.selectedDistricts = this.selectedDistricts + ',' + options.dataViews[0].table.rows[distRow][0];
 					}
-                }
-            }			 
+                }											
+            }
+
+			//Calculate Map Centre by average
+				var tempSplit = this.selectedDistricts.split(",");
+				this.mapLatitude = (this.mapLatitude/tempSplit.length).toFixed(4);
+				this.mapLongitude = (this.mapLongitude/tempSplit.length).toFixed(4);
 			//}
 			
 			//if(options.dataViews[0].categorical.categories[0].source.displayName === 'MANDAL')
