@@ -248,8 +248,7 @@ module powerbi.visuals {
         private loadSelectedRegions() {            												
 				//debugger;												
 				var div = d3.select("body").append("div")	
-				.attr("class", "tooltip")				
-				.style("opacity", 0);
+				.attr("class", "mouse");
 				
 				var updateSelection = this.mapSvg.selectAll("path").data(this.geoJson)				
 				updateSelection.enter().append("path").attr('class', 'region')				
@@ -266,27 +265,40 @@ module powerbi.visuals {
                 .style("top", (d3.event.clientY - 28) + "px");;	           
 
 				}).on("mouseout", function() {
-					 div.transition()		
+					div.transition()		
                 	.duration(500)		
                 	.style("opacity", 0);
 				})
 			
 			var viewBoundaries = Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(16.4973, 80.64112));
 			
-			if(this.selectedDistricts.split(",").length === 13)
-			{
-				this.map.setView({ bounds: viewBoundaries});				
-				this.map.setView({zoom:6});
-			}
-			else
-			{
-				if(this.mapLatitude !== undefined && this.mapLatitude !== '' && this.mapLatitude !== null && this.mapLongitude !== undefined && this.mapLongitude !== '' && this.mapLongitude !== null)
+			if(this.selectedDistricts !== null && this.selectedDistricts !== undefined && this.selectedDistricts != '')
 				{
-					viewBoundaries = Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(this.mapLatitude, this.mapLongitude));
-					this.map.setView({ bounds: viewBoundaries});				
-					this.map.setView({zoom:8});
+				
+					if(this.selectedDistricts.split(",").length === 13)
+					{
+						this.map.setView({ bounds: viewBoundaries});				
+						this.map.setView({zoom:6});
+					}
+					else
+					{
+						if(this.mapLatitude !== undefined && this.mapLatitude !== '' && this.mapLatitude !== null && this.mapLongitude !== undefined && this.mapLongitude !== '' && this.mapLongitude !== null)
+						{
+							viewBoundaries = Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(this.mapLatitude, this.mapLongitude));
+							this.map.setView({ bounds: viewBoundaries});				
+							this.map.setView({zoom:8});
+						}
+					}
 				}
-			}
+			else
+				{
+					if(this.mapLatitude !== undefined && this.mapLatitude !== '' && this.mapLatitude !== null && this.mapLongitude !== undefined && this.mapLongitude !== '' && this.mapLongitude !== null)
+					{
+						viewBoundaries = Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(this.mapLatitude, this.mapLongitude));
+						this.map.setView({ bounds: viewBoundaries});				
+						this.map.setView({zoom:8});
+					}
+				}
         }
 		
         private loadScripts(onScriptsLoaded: () => void) {	
@@ -407,8 +419,11 @@ module powerbi.visuals {
 			this.selectedDistricts = '';
 			
             for (var distRow in options.dataViews[0].table.rows) 
-            { 		
-				var latlongOfDistrict = this.getLatLongOfRegion(options.dataViews[0].table.rows[distRow][0]).split(",");
+            { 						
+				var latlongValue = this.getLatLongOfRegion(options.dataViews[0].table.rows[distRow][0]);
+				if(latlongValue !== undefined)
+				{
+				var latlongOfDistrict = latlongValue.split(",");
 				
                 if(this.selectedDistricts === '' || this.selectedDistricts === undefined || this.selectedDistricts === null)
                 {
@@ -428,7 +443,8 @@ module powerbi.visuals {
 						
 						this.selectedDistricts = this.selectedDistricts + ',' + options.dataViews[0].table.rows[distRow][0];
 					}
-                }											
+                }
+				}					
             }
 
 			//Calculate Map Centre by average
