@@ -277,16 +277,16 @@ module powerbi.visuals {
 				
 					if(this.selectedDistricts.split(",").length === 13)
 					{
-						this.map.setView({ bounds: viewBoundaries});				
-						this.map.setView({zoom:6});
+						this.map.setView({ bounds: viewBoundaries});
+						this.map.setView({zoom:6});															
 					}
 					else
 					{
 						if(this.mapLatitude !== undefined && this.mapLatitude !== '' && this.mapLatitude !== null && this.mapLongitude !== undefined && this.mapLongitude !== '' && this.mapLongitude !== null)
 						{
 							viewBoundaries = Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(this.mapLatitude, this.mapLongitude));
-							this.map.setView({ bounds: viewBoundaries});				
-							this.map.setView({zoom:8});
+							this.map.setView({ bounds: viewBoundaries});
+							this.map.setView({zoom:8});																	
 						}
 					}
 				}
@@ -295,8 +295,8 @@ module powerbi.visuals {
 					if(this.mapLatitude !== undefined && this.mapLatitude !== '' && this.mapLatitude !== null && this.mapLongitude !== undefined && this.mapLongitude !== '' && this.mapLongitude !== null)
 					{
 						viewBoundaries = Microsoft.Maps.LocationRect.fromLocations(new Microsoft.Maps.Location(this.mapLatitude, this.mapLongitude));
-						this.map.setView({ bounds: viewBoundaries});				
-						this.map.setView({zoom:8});
+						this.map.setView({ bounds: viewBoundaries});	
+						this.map.setView({zoom:6});														
 					}
 				}
         }
